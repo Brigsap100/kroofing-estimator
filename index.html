@@ -15,6 +15,8 @@
                #project-card   — static inputs bound via data-path/data-type
                #assembly-body  — empty; rendered by ui.js
                #sections-list, #btn-add-section
+               #preview-card   — interactive roof drawing: #preview-tabs,
+               #preview-svg, #preview-detail (rendered by ui.js)
                #markups-card   — static num inputs (markups.*)
     Results:   #results (aside; gets class "open" as a bottom sheet <900px)
                #res-total, #res-persf, #res-split, #res-errors, #res-warnings
@@ -135,7 +137,15 @@
                 <input id="in-proj-stories" type="number" min="1" step="1" inputmode="decimal" data-path="project.stories" data-type="num">
               </div>
               <div class="field">
-                <label for="in-proj-cranedays">Crane days</label>
+                <label for="in-proj-equiptype">Hoisting equipment</label>
+                <select id="in-proj-equiptype" data-path="project.equipmentType">
+                  <option value="crane">Crane</option>
+                  <option value="forklift">Forklift / telehandler</option>
+                  <option value="none">None</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="in-proj-cranedays">Equipment days</label>
                 <input id="in-proj-cranedays" type="number" min="0" step="1" inputmode="decimal" data-path="project.craneDays" data-type="num">
               </div>
               <div class="field full check-group">
@@ -166,6 +176,14 @@
             <h2 class="card-title">Sections</h2>
             <div id="sections-list"></div>
             <button id="btn-add-section" class="btn btn-ghost" type="button">Add section</button>
+          </div>
+
+          <!-- Interactive roof preview (rendered by ui.js) -->
+          <div class="card" id="preview-card">
+            <h2 class="card-title">Roof preview</h2>
+            <div id="preview-tabs" class="pv-tabs"></div>
+            <div id="preview-svg"></div>
+            <div id="preview-detail" class="pv-detail">Hover or tap any part of the drawing to see its material, quantity, and cost.</div>
           </div>
 
           <!-- Markups -->

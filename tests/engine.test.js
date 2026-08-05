@@ -405,7 +405,18 @@ eq(blankRes.totals.grandTotal, 0, 'new: blank estimate totals $0');
 ok(JSON.stringify(blankRes).indexOf('NaN') === -1, 'new: no NaN in blank result');
 
 // Smoke: KRE_DEFAULT_CATALOG keys line up with what the engine reads.
-ok(!JSON.stringify(defaults.KRE_DEFAULT_CATALOG).match(/density/i), 'defaults: catalog contains NO fastening densities');
+// Densities may appear ONLY inside systemTemplates and ONLY as literal 0
+// (loose-laid ballasted systems have no fasteners by definition). No real
+// wind-uplift values may ever ship in the catalog.
+(function () {
+  var noTpl = JSON.parse(JSON.stringify(defaults.KRE_DEFAULT_CATALOG));
+  delete noTpl.systemTemplates;
+  ok(!JSON.stringify(noTpl).match(/density/i), 'defaults: no fastening densities outside systemTemplates');
+  var tplDensities = JSON.stringify(defaults.KRE_DEFAULT_CATALOG.systemTemplates || {})
+    .match(/"[a-z]+(?:PerBoard|PerSq)":\s*(-?[\d.]+)/gi) || [];
+  ok(tplDensities.every(function (m) { return parseFloat(m.split(':')[1]) === 0; }),
+    'defaults: template densities, if any, are exactly 0 (loose-laid only)');
+})();
 eq(defaults.KRE_DEFAULT_CATALOG.meta.schemaVersion, 1, 'defaults: meta.schemaVersion 1');
 eq(defaults.KRE_DEFAULT_CATALOG.meta.customized, false, 'defaults: meta.customized false');
 ok(Array.isArray(defaults.KRE_CATALOG_SCHEMA) && defaults.KRE_CATALOG_SCHEMA.length > 0, 'defaults: schema is a non-empty array');

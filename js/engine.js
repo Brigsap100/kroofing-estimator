@@ -161,11 +161,13 @@ function computeEstimate(estimate, catalog) {
 
   /* ---- per-section computation ---- */
   var totalTons = 0, totalSquares = 0, totalArea = 0, anyWork = false, anyTapered = false;
+  var resolvedAsm = {}; // section id → merged assembly, exposed on section results
 
   (Array.isArray(estimate.sections) ? estimate.sections : []).forEach(function (sec) {
     if (!isPlainObject(sec)) return;
     var sid = sec.id || null;
     var asm = deepMerge(baseAsm, sec.assemblyOverride);
+    resolvedAsm[sid] = asm;
     var att = asm.attachment || {};
     var zs = att.zoneSplit || factors.zoneSplitDefault || {};
 
@@ -596,15 +598,21 @@ function computeEstimate(estimate, catalog) {
     });
   }
 
-  // Equipment
+  // Equipment — hoisting type is interchangeable (crane / forklift)
+  var HOISTING = {
+    crane: { label: 'Crane', rateKey: 'craneDay' },
+    forklift: { label: 'Forklift / telehandler', rateKey: 'forkliftDay' }
+  };
   var equipCat = catalog.equipment || {};
-  var craneDays = num(proj.craneDays, 0);
-  if (craneDays > 0) {
+  var equipDays = num(proj.craneDays, 0); // field name kept for stored-draft compat
+  var hoist = HOISTING[proj.equipmentType || 'crane']; // 'none' → no entry → no line
+  if (equipDays > 0 && hoist) {
+    var equipRate = num(equipCat[hoist.rateKey], 0);
     addLine({
-      sectionId: null, category: 'equipment', sku: 'crane',
-      desc: 'Crane — ' + craneDays + ' day(s)',
-      qty: craneDays, unit: 'day', unitMat: num(equipCat.craneDay, 0),
-      matTotal: craneDays * num(equipCat.craneDay, 0), hrs: 0, taxable: false
+      sectionId: null, category: 'equipment', sku: proj.equipmentType || 'crane',
+      desc: hoist.label + ' — ' + equipDays + ' day(s)',
+      qty: equipDays, unit: 'day', unitMat: equipRate,
+      matTotal: equipDays * equipRate, hrs: 0, taxable: false
     });
   }
   if (anyWork && num(equipCat.mobilization, 0) > 0) {
@@ -660,7 +668,8 @@ function computeEstimate(estimate, catalog) {
     var sl = lines.filter(function (l) { return l.sectionId === sid && sid !== null; });
     var m = 0, lc = 0, h = 0;
     sl.forEach(function (l) { m += l.matTotal; lc += l.laborTotal; h += l.hrs; });
-    return { id: sid, name: (sec && sec.name) || '', lines: sl, hours: r2(h), matCost: r2(m), laborCost: r2(lc) };
+    return { id: sid, name: (sec && sec.name) || '', assembly: resolvedAsm[sid] || null,
+      lines: sl, hours: r2(h), matCost: r2(m), laborCost: r2(lc) };
   });
 
   /* ---- procurement order list: sum raw quantities, THEN ceil ---- */
@@ -700,6 +709,7 @@ function blankSection(name) {
     wallFlash: { lf: 0, avgHeightFt: 0 },
     penetrations: { pipe: 0, curb: 0, skylight: 0, hvac: 0 },
     drains: 0, scuppers: 0,
+    templateKey: null, // display/bookkeeping: which system template filled assemblyOverride
     assemblyOverride: null, wastePctOverride: null, notes: ''
   };
 }
@@ -713,7 +723,7 @@ function newEstimate(catalog) {
     project: {
       name: '', customer: '', address: '', city: '', state: 'CA',
       estimator: '', bidDate: '', prevailingWage: false,
-      stories: 1, tightAccess: false, craneDays: 0, notes: ''
+      stories: 1, tightAccess: false, equipmentType: 'crane', craneDays: 0, notes: ''
     },
     assembly: {
       deckType: 'steel',

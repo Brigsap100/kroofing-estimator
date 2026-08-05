@@ -9,6 +9,17 @@ material order list, and internal / client-proposal printouts.
 Plain static HTML/CSS/JS — no framework, no build step, no backend. All data
 stays in the browser (localStorage) with JSON export/import.
 
+Key concepts: **system templates** (named assembly stacks like "TPO 60-mil —
+Mechanically Attached") can be applied to the whole estimate or assigned per
+section — assigning one snapshots it into the section so saved estimates stay
+frozen, self-contained documents. Your own templates ("Save current as…" on
+the Assembly card) persist separately from the rates catalog and ride along in
+catalog JSON exports. Hoisting equipment is interchangeable (crane / forklift /
+none) with separate day rates. The **Roof preview** card draws an interactive
+cross-section of each section — layers, attachment, flashing, penetrations —
+from what the engine actually priced; hover/tap any element for its
+quantities and cost.
+
 ## ⚠️ Rates are SAMPLE placeholders
 
 Every price and labor production rate the app ships with is a **placeholder,

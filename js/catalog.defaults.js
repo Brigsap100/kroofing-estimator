@@ -146,6 +146,7 @@ var KRE_DEFAULT_CATALOG = {
 
   equipment: {
     craneDay: 1800,       // $/day crane w/ operator
+    forkliftDay: 650,     // $/day telehandler/forklift rental
     mobilization: 1200,   // flat per project
     dumpster: { perPull: 650, perTon: 95, capacityTons: 10 }
   },
@@ -162,6 +163,56 @@ var KRE_DEFAULT_CATALOG = {
     profitPct: 10,
     contingencyPct: 0,
     materialTaxPct: 8.25
+  },
+
+  /* System templates — named, reusable assembly stacks an estimator assigns
+     per roof section (or applies to the whole estimate). Each is a SPARSE
+     assembly object deep-merged over the estimate's assembly, so anything a
+     template omits (zone split, fastening densities, assembly reference) is
+     inherited rather than overwritten — densities stay user-entered per the
+     liability rule. Ballasted templates carry explicit 0 densities because
+     loose-laid is the definition of that system. Managed from the Assembly
+     card ("Save current as template"), not the rates editor. */
+  systemTemplates: {
+    'tpo60-ma': {
+      label: 'TPO 60-mil — Mechanically Attached',
+      assembly: {
+        vaporRetarder: null, insulationLayers: [{ productKey: 'iso-26' }],
+        tapered: null, coverBoard: null, membraneKey: 'tpo-60',
+        attachment: { method: 'mech' }
+      }
+    },
+    'tpo60-fa': {
+      label: 'TPO 60-mil — Fully Adhered',
+      assembly: {
+        vaporRetarder: null,
+        insulationLayers: [{ productKey: 'iso-26' }, { productKey: 'iso-20' }],
+        tapered: null, coverBoard: 'hd-iso-05', membraneKey: 'tpo-60',
+        attachment: { method: 'adhered', adhesiveKey: 'ba-lvoc-5' }
+      }
+    },
+    'pvc60-ma': {
+      label: 'PVC 60-mil — Mechanically Attached',
+      assembly: {
+        vaporRetarder: null, insulationLayers: [{ productKey: 'iso-26' }],
+        tapered: null, coverBoard: null, membraneKey: 'pvc-60',
+        attachment: { method: 'mech' }
+      }
+    },
+    'epdm60-ballast': {
+      label: 'EPDM 60-mil — Ballasted (loose-laid)',
+      assembly: {
+        vaporRetarder: null, insulationLayers: [{ productKey: 'iso-26' }],
+        tapered: null, coverBoard: null, membraneKey: 'epdm-60-wide',
+        attachment: {
+          method: 'ballast', ballastKey: 'rock-10',
+          // Insulation zeros are load-bearing: without them a ballasted section
+          // would inherit the estimate's mech densities and price fasteners on a
+          // loose-laid system. (membraneDensity is only read for method 'mech'.)
+          insulationDensity: { fieldPerBoard: 0, perimPerBoard: 0, cornerPerBoard: 0 }
+        }
+      }
+    }
   }
 };
 
@@ -294,6 +345,7 @@ var KRE_CATALOG_SCHEMA = [
 
   { kind: 'fields', title: 'Equipment & disposal', fields: [
       { path: 'equipment.craneDay',              label: 'Crane (with operator)', step: 50, unit: '$/day' },
+      { path: 'equipment.forkliftDay',           label: 'Forklift / telehandler', step: 25, unit: '$/day' },
       { path: 'equipment.mobilization',          label: 'Mobilization (flat)',   step: 50, unit: '$' },
       { path: 'equipment.dumpster.perPull',      label: 'Dumpster pull',         step: 25, unit: '$/pull' },
       { path: 'equipment.dumpster.perTon',       label: 'Disposal tipping',      step: 5,  unit: '$/ton' },

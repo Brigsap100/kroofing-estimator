@@ -22,6 +22,7 @@
   var KEY_DRAFT = 'kre.draft';
   var KEY_ESTIMATES = 'kre.estimates';
   var KEY_UI = 'kre.ui';
+  var KEY_TEMPLATES = 'kre.templates';
   var KEY_BACKUP_PREFIX = 'kre.backup.';
 
   /* ------------------------------------------------------------------ *
@@ -370,6 +371,23 @@
     return isPlainObject(saved) ? saved : {};
   }
 
+  /** User-saved system templates ({key: {label, assembly}}) — real data, so
+      it gets its own key with a schemaVersion and a migrate() pass (unlike
+      UI prefs), and survives a catalog reset. */
+  function loadTemplates() {
+    var saved = readJSON(KEY_TEMPLATES);
+    if (!isPlainObject(saved)) return {};
+    saved = migrate(saved, 'templates');
+    return isPlainObject(saved.items) ? saved.items : {};
+  }
+
+  function saveTemplates(items) {
+    return writeJSON(KEY_TEMPLATES, {
+      schemaVersion: CURRENT_SCHEMA_VERSION,
+      items: isPlainObject(items) ? items : {}
+    });
+  }
+
   function saveUI(obj) {
     if (!isPlainObject(obj)) return false;
     return writeJSON(KEY_UI, obj);
@@ -467,6 +485,8 @@
 
     loadUI: loadUI,
     saveUI: saveUI,
+    loadTemplates: loadTemplates,
+    saveTemplates: saveTemplates,
 
     migrate: migrate,
 
@@ -584,6 +604,12 @@
       /* ---- UI prefs ---- */
       saveUI({ tab: 'catalog' });
       check('saveUI/loadUI round-trip', loadUI().tab === 'catalog');
+
+      saveTemplates({ 'my-tpo': { label: 'My TPO', assembly: { membraneKey: 'tpo-60' } } });
+      check('saveTemplates/loadTemplates round-trip',
+        loadTemplates()['my-tpo'].assembly.membraneKey === 'tpo-60');
+      check('loadTemplates: nothing stored → {}',
+        (function () { removeKey(KEY_TEMPLATES); var t = loadTemplates(); return isPlainObject(t) && Object.keys(t).length === 0; })());
       mem.removeItem('kre.ui');
       check('loadUI: nothing stored → {}',
         isPlainObject(loadUI()) && Object.keys(loadUI()).length === 0);
