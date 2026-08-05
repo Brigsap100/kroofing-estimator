@@ -1,0 +1,258 @@
+<!doctype html>
+<!--
+  Kodiak Roofing & Waterproofing — Single-Ply Estimator
+  =====================================================
+  INTERNAL TOOL — noindex. Plain static HTML/CSS/JS, no build step.
+
+  ID CONTRACT (shared with js/ui.js + js/print.js — do not rename):
+    Header:    #sample-pill (SAMPLE RATES pill, hidden until ui.js shows it)
+               #btn-new-est, #btn-save-est
+    Tabs:      buttons carry data-tab="estimate"|"catalog"|"saved"
+               panels #tab-estimate, #tab-catalog (hidden), #tab-saved (hidden)
+               (ui.js toggles class "active" on the tab buttons)
+    Estimate:  #project-card   — static inputs bound via data-path/data-type
+               #assembly-body  — empty; rendered by ui.js
+               #sections-list, #btn-add-section
+               #markups-card   — static num inputs (markups.*)
+    Results:   #results (aside; gets class "open" as a bottom sheet <900px)
+               #res-total, #res-persf, #res-split, #res-errors, #res-warnings
+               #res-lines, #res-order (inside <details>)
+               #btn-print-internal, #btn-print-proposal, #btn-export-est
+               #btn-results-close  — mobile sheet close (added; hidden >=900px)
+    Mobile:    #mobile-summary (fixed bar <900px; tap toggles .open on #results)
+               #msum-total, #msum-persf (added; live total / $/SF text targets)
+    Catalog:   #catalog-banner (SAMPLE warning; ui.js toggles hidden)
+               #btn-cat-save, #btn-cat-reset, #btn-cat-export, #btn-cat-import
+               #file-cat (hidden file input)
+               #catalog-body — empty; rendered by ui.js
+    Saved:     #btn-est-import, #file-est (hidden file input)
+               #saved-body — empty; rendered by ui.js
+    Print:     #print-root (hidden; print.js fills it and sets body class
+               "print-internal" or "print-proposal")
+
+  Data binding: inputs carry data-path (e.g. "project.name") and optionally
+  data-type="num"|"bool". ui.js attaches one delegated listener.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Kodiak Roofing — Estimator</title>
+  <link rel="icon" type="image/png" href="assets/img/logo-seal.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Roboto+Condensed:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- ================= HEADER ================= -->
+  <header class="app-head">
+    <div class="wrap head-row">
+      <div class="brand-mark">
+        <span class="logo-chip"><img src="assets/img/logo.png" alt="Kodiak Roofing &amp; Waterproofing"></span>
+        <span class="wordmark">Estimator</span>
+      </div>
+      <div class="head-actions">
+        <span id="sample-pill" class="pill-warn" hidden>SAMPLE RATES</span>
+        <button id="btn-new-est" class="btn btn-ghost btn-sm" type="button">New</button>
+        <button id="btn-save-est" class="btn btn-red btn-sm" type="button">Save estimate</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= TAB NAV ================= -->
+  <nav class="tabs" aria-label="Sections">
+    <div class="wrap tabs-row">
+      <button class="tab active" type="button" data-tab="estimate">Estimate</button>
+      <button class="tab" type="button" data-tab="catalog">Catalog &amp; Rates</button>
+      <button class="tab" type="button" data-tab="saved">Saved</button>
+    </div>
+  </nav>
+
+  <main class="wrap">
+
+    <!-- ================= ESTIMATE TAB ================= -->
+    <section id="tab-estimate" class="tab-panel">
+      <div class="est-grid">
+
+        <div class="form-col">
+
+          <!-- Project -->
+          <div class="card" id="project-card">
+            <h2 class="card-title">Project</h2>
+            <div class="fgrid">
+              <div class="field">
+                <label for="in-proj-name">Project name</label>
+                <input id="in-proj-name" type="text" data-path="project.name" autocomplete="off">
+              </div>
+              <div class="field">
+                <label for="in-proj-customer">Customer</label>
+                <input id="in-proj-customer" type="text" data-path="project.customer" autocomplete="off">
+              </div>
+              <div class="field full">
+                <label for="in-proj-address">Address</label>
+                <input id="in-proj-address" type="text" data-path="project.address" autocomplete="off">
+              </div>
+              <div class="field">
+                <label for="in-proj-city">City</label>
+                <input id="in-proj-city" type="text" data-path="project.city" autocomplete="off">
+              </div>
+              <div class="field">
+                <label for="in-proj-state">State</label>
+                <select id="in-proj-state" data-path="project.state">
+                  <option value="CA">CA</option>
+                  <option value="NV">NV</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="in-proj-estimator">Estimator</label>
+                <input id="in-proj-estimator" type="text" data-path="project.estimator" autocomplete="off">
+              </div>
+              <div class="field">
+                <label for="in-proj-biddate">Bid date</label>
+                <input id="in-proj-biddate" type="date" data-path="project.bidDate">
+              </div>
+              <div class="field">
+                <label for="in-proj-stories">Stories</label>
+                <input id="in-proj-stories" type="number" min="1" step="1" inputmode="decimal" data-path="project.stories" data-type="num">
+              </div>
+              <div class="field">
+                <label for="in-proj-cranedays">Crane days</label>
+                <input id="in-proj-cranedays" type="number" min="0" step="1" inputmode="decimal" data-path="project.craneDays" data-type="num">
+              </div>
+              <div class="field full check-group">
+                <label class="check-row">
+                  <input type="checkbox" data-path="project.prevailingWage" data-type="bool">
+                  <span>Prevailing wage</span>
+                </label>
+                <label class="check-row">
+                  <input type="checkbox" data-path="project.tightAccess" data-type="bool">
+                  <span>Tight access</span>
+                </label>
+              </div>
+              <div class="field full">
+                <label for="in-proj-notes">Notes</label>
+                <textarea id="in-proj-notes" rows="3" data-path="project.notes"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- Assembly (rendered by ui.js) -->
+          <div class="card" id="assembly-card">
+            <h2 class="card-title">Roof assembly</h2>
+            <div id="assembly-body"></div>
+          </div>
+
+          <!-- Sections -->
+          <div class="card" id="sections-card">
+            <h2 class="card-title">Sections</h2>
+            <div id="sections-list"></div>
+            <button id="btn-add-section" class="btn btn-ghost" type="button">Add section</button>
+          </div>
+
+          <!-- Markups -->
+          <div class="card" id="markups-card">
+            <h2 class="card-title">Markups</h2>
+            <div class="fgrid four">
+              <div class="field">
+                <label for="in-mk-overhead">Overhead %</label>
+                <input id="in-mk-overhead" type="number" min="0" step="0.1" inputmode="decimal" data-path="markups.overheadPct" data-type="num">
+              </div>
+              <div class="field">
+                <label for="in-mk-profit">Profit %</label>
+                <input id="in-mk-profit" type="number" min="0" step="0.1" inputmode="decimal" data-path="markups.profitPct" data-type="num">
+              </div>
+              <div class="field">
+                <label for="in-mk-contingency">Contingency %</label>
+                <input id="in-mk-contingency" type="number" min="0" step="0.1" inputmode="decimal" data-path="markups.contingencyPct" data-type="num">
+              </div>
+              <div class="field">
+                <label for="in-mk-mattax">Material tax %</label>
+                <input id="in-mk-mattax" type="number" min="0" step="0.01" inputmode="decimal" data-path="markups.materialTaxPct" data-type="num">
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /.form-col -->
+
+        <!-- Results -->
+        <aside id="results">
+          <button id="btn-results-close" class="sheet-close" type="button" aria-label="Close results">&times;</button>
+          <div class="res-head">
+            <span class="res-label">Grand total</span>
+            <div id="res-total" class="res-total">$0</div>
+            <div id="res-persf" class="res-persf"></div>
+          </div>
+          <div id="res-split" class="res-split"></div>
+          <ul id="res-errors" class="msg-list errors"></ul>
+          <ul id="res-warnings" class="msg-list warnings"></ul>
+          <details class="res-details">
+            <summary>Line items</summary>
+            <div id="res-lines"></div>
+          </details>
+          <details class="res-details">
+            <summary>Material order list</summary>
+            <div id="res-order"></div>
+          </details>
+          <div class="res-actions">
+            <button id="btn-print-internal" class="btn btn-ghost btn-sm" type="button">Print internal</button>
+            <button id="btn-print-proposal" class="btn btn-red btn-sm" type="button">Print proposal</button>
+            <button id="btn-export-est" class="btn btn-ghost btn-sm" type="button">Export JSON</button>
+          </div>
+        </aside>
+
+      </div><!-- /.est-grid -->
+
+      <!-- Mobile summary bar (<900px) -->
+      <div id="mobile-summary" role="button" tabindex="0" aria-label="Show estimate results">
+        <div class="msum-nums">
+          <span id="msum-total" class="msum-total">$0</span>
+          <span id="msum-persf" class="msum-persf"></span>
+        </div>
+        <span class="msum-hint">Details &#9650;</span>
+      </div>
+    </section>
+
+    <!-- ================= CATALOG TAB ================= -->
+    <section id="tab-catalog" class="tab-panel" hidden>
+      <div id="catalog-banner" class="catalog-banner" hidden>
+        <strong>SAMPLE RATES.</strong> Every price and production rate below is a
+        placeholder — not a real Kodiak number. Enter your own rates and press
+        &ldquo;Save catalog&rdquo; before bidding from this tool.
+      </div>
+      <div class="cat-actions">
+        <button id="btn-cat-save" class="btn btn-red btn-sm" type="button">Save catalog</button>
+        <button id="btn-cat-reset" class="btn btn-ghost btn-sm" type="button">Reset to defaults</button>
+        <button id="btn-cat-export" class="btn btn-ghost btn-sm" type="button">Export JSON</button>
+        <button id="btn-cat-import" class="btn btn-ghost btn-sm" type="button">Import JSON</button>
+        <input type="file" id="file-cat" accept=".json" hidden>
+      </div>
+      <div id="catalog-body"></div>
+    </section>
+
+    <!-- ================= SAVED TAB ================= -->
+    <section id="tab-saved" class="tab-panel" hidden>
+      <div class="cat-actions">
+        <button id="btn-est-import" class="btn btn-ghost btn-sm" type="button">Import estimate JSON</button>
+        <input type="file" id="file-est" accept=".json" hidden>
+      </div>
+      <div id="saved-body"></div>
+    </section>
+
+  </main>
+
+</div><!-- /.app -->
+
+<!-- Print output (populated by js/print.js) -->
+<div id="print-root" hidden></div>
+
+<script src="js/catalog.defaults.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/print.js"></script>
+<script src="js/ui.js"></script>
+</body>
+</html>
