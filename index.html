@@ -10,7 +10,9 @@
     Tabs:      buttons carry data-tab="estimate"|"catalog"|"saved"
                panels #tab-estimate, #tab-catalog (hidden), #tab-saved (hidden)
                (ui.js toggles class "active" on the tab buttons)
-    Estimate:  #project-card   — static inputs bound via data-path/data-type
+    Estimate:  #import-card    — file import: #dropzone, #file-import,
+               #csv-template-link, #import-review (review panel, ui.js)
+               #project-card   — static inputs bound via data-path/data-type
                #assembly-body  — empty; rendered by ui.js
                #sections-list, #btn-add-section
                #markups-card   — static num inputs (markups.*)
@@ -79,6 +81,19 @@
       <div class="est-grid">
 
         <div class="form-col">
+
+          <!-- Import from file -->
+          <div class="card" id="import-card">
+            <h2 class="card-title">Import from file</h2>
+            <div id="dropzone" tabindex="0" role="button" aria-label="Import a file">
+              <strong>Drop a file here or click to browse</strong>
+              <span>Estimate JSON &middot; CSV / Excel takeoff sheet &middot; PDF measurement report</span>
+            </div>
+            <input type="file" id="file-import" accept=".json,.csv,.tsv,.txt,.xlsx,.pdf" hidden>
+            <p class="mini-note">CSV/Excel: <a href="#" id="csv-template-link">download the takeoff template</a>.
+              PDF extraction is best-effort &mdash; review what was found before applying.</p>
+            <div id="import-review" hidden></div>
+          </div>
 
           <!-- Project -->
           <div class="card" id="project-card">
@@ -252,6 +267,7 @@
 <script src="js/catalog.defaults.js"></script>
 <script src="js/engine.js"></script>
 <script src="js/storage.js"></script>
+<script src="js/importer.js"></script>
 <script src="js/print.js"></script>
 <script src="js/ui.js"></script>
 </body>

@@ -27,6 +27,25 @@ number, manufacturer letter, etc.). Record that reference in the
 "Manufacturer-approved assembly reference" field; it prints on the proposal.
 An explicit `0` is valid (loose-laid/ballasted); blank is not.
 
+## Import from file
+
+The card at the top of the Estimate tab accepts a dropped/browsed file:
+
+- **Estimate JSON** (exported by this app) — loads the whole estimate exactly.
+- **Catalog JSON** — detected automatically and routed to the rates import.
+- **CSV / TSV / Excel (.xlsx)** — takeoff sheets. Download the template from
+  the link under the drop-zone; header names are matched loosely (e.g.
+  "Client", "Area SqFt", "Roof Drains", "RTUs" all work; sq ft auto-converts
+  to squares). `.xlsx` is read with the browser's built-in decompressor — no
+  libraries; old `.xls` must be re-saved as `.xlsx`/`.csv`.
+- **PDF measurement reports** — best-effort text extraction and
+  pattern-matching (area, perimeter, parapet LF, drains, penetrations…).
+  Works on text-based PDFs only, not scans.
+
+Nothing is applied silently: extracted values appear in a review panel and
+only land in the estimate when you press **Apply** (replacing sections asks
+first if the current ones have data).
+
 ## Run
 
 ```bash

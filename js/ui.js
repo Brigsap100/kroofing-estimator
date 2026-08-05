@@ -594,6 +594,12 @@
       case 'cat-import': $('file-cat').click(); break;
       case 'est-import-btn': $('file-est').click(); break;
       case 'results-close': $('results').classList.remove('open'); break;
+      case 'import-apply': applyImport(); break;
+      case 'import-dismiss':
+        App.pendingImport = null;
+        $('import-review').hidden = true;
+        $('import-review').innerHTML = '';
+        break;
       case 'est-load': case 'est-dup': case 'est-del': case 'est-exp': {
         var entry = KRE.storage.getEstimate(btn.dataset.id);
         if (!entry) break;
@@ -667,6 +673,155 @@
     });
   }
 
+  /* ---------- file import (dropzone at top of Estimate tab) ---------- */
+
+  var IMPORT_SECTION_FIELDS = [
+    // [extract key, estimate path within section, label]
+    ['fieldSquares', 'fieldSquares', 'Field area (squares)'],
+    ['perimeterLF', 'perimeterLF', 'Perimeter LF'],
+    ['edgeLf', 'edgeMetal.lf', 'Edge metal LF'],
+    ['flashLf', 'wallFlash.lf', 'Wall/curb flashing LF'],
+    ['flashHeightFt', 'wallFlash.avgHeightFt', 'Flashing height ft'],
+    ['pipe', 'penetrations.pipe', 'Pipes'],
+    ['curb', 'penetrations.curb', 'Curbs'],
+    ['skylight', 'penetrations.skylight', 'Skylights'],
+    ['hvac', 'penetrations.hvac', 'HVAC units'],
+    ['drains', 'drains', 'Drains'],
+    ['scuppers', 'scuppers', 'Scuppers'],
+    ['existingLayers', 'existingLayers', 'Existing layers']
+  ];
+  var IMPORT_PROJECT_LABELS = {
+    name: 'Project name', customer: 'Customer', address: 'Address', city: 'City',
+    state: 'State', estimator: 'Estimator', stories: 'Stories', craneDays: 'Crane days', notes: 'Notes'
+  };
+
+  function handleImportFile(file) {
+    if (!file) return;
+    var review = $('import-review');
+    review.hidden = false;
+    review.innerHTML = '<p class="muted">Reading ' + esc(file.name) + '…</p>';
+    KRE.importer.parseFile(file).then(function (result) {
+      if (result.kind === 'estimate') {
+        review.hidden = true;
+        if (confirm('Load the estimate from "' + result.sourceName + '"? The current draft will be replaced.')) {
+          App.estimate = result.estimate;
+          renderEstimateForm();
+          KRE.storage.autosaveDraft(App.estimate);
+        }
+        return;
+      }
+      if (result.kind === 'catalog') {
+        review.hidden = true;
+        if (confirm('"' + result.sourceName + '" is a CATALOG (rates) file. Import it and use these rates?')) {
+          App.catalog = KRE.storage.deepMerge(KRE_DEFAULT_CATALOG, result.catalog);
+          KRE.storage.saveCatalog(App.catalog);
+          App.customized = true;
+          renderCatalog(); renderAssembly(); updateSampleBadges(); scheduleResults();
+        }
+        return;
+      }
+      renderImportReview(result);
+    }).catch(function (err) {
+      review.hidden = false;
+      review.innerHTML = '<div class="liability-note">Import failed: ' + esc(err.message || err) + '</div>' +
+        '<button type="button" class="btn btn-ghost btn-sm" data-action="import-dismiss">Dismiss</button>';
+    });
+  }
+
+  function renderImportReview(result) {
+    var ex = result.extract || { project: {}, sections: [], notes: [] };
+    var review = $('import-review');
+    var rows = '';
+
+    Object.keys(ex.project).forEach(function (k) {
+      if (ex.project[k] == null || ex.project[k] === '') return;
+      rows += '<tr><td>' + esc(IMPORT_PROJECT_LABELS[k] || k) + '</td><td>' + esc(ex.project[k]) + '</td></tr>';
+    });
+    ex.sections.forEach(function (s, i) {
+      rows += '<tr class="group-row"><td colspan="2">Section: ' + esc(s.name || ('Section ' + (i + 1))) +
+        (s.scope ? ' <span class="muted">(' + esc(s.scope) + ')</span>' : '') + '</td></tr>';
+      IMPORT_SECTION_FIELDS.forEach(function (f) {
+        if (s[f[0]] == null) return;
+        rows += '<tr><td>' + esc(f[2]) + '</td><td class="num">' + esc(s[f[0]]) + '</td></tr>';
+      });
+    });
+
+    if (!rows) {
+      review.hidden = false;
+      review.innerHTML = '<div class="liability-note">Nothing usable was found in "' + esc(result.sourceName) + '". ' +
+        (ex.notes.length ? esc(ex.notes.join(' ')) : 'Try the CSV template, or an estimate JSON export.') + '</div>' +
+        '<button type="button" class="btn btn-ghost btn-sm" data-action="import-dismiss">Dismiss</button>';
+      return;
+    }
+
+    App.pendingImport = ex;
+    review.hidden = false;
+    review.innerHTML =
+      '<p class="mini-note">Found in <strong>' + esc(result.sourceName) + '</strong> — review, then apply:</p>' +
+      '<div class="table-scroll"><table class="cat-table"><tbody>' + rows + '</tbody></table></div>' +
+      (ex.notes.length ? '<p class="mini-note">' + esc(ex.notes.join(' · ')) + '</p>' : '') +
+      '<div class="res-actions">' +
+      '<button type="button" class="btn btn-red btn-sm" data-action="import-apply">Apply to estimate</button>' +
+      '<button type="button" class="btn btn-ghost btn-sm" data-action="import-dismiss">Dismiss</button>' +
+      '</div>';
+  }
+
+  function applyImport() {
+    var ex = App.pendingImport;
+    if (!ex) return;
+    Object.keys(ex.project).forEach(function (k) {
+      var v = ex.project[k];
+      if (v != null && v !== '' && k in App.estimate.project) App.estimate.project[k] = v;
+    });
+    if (ex.sections.length) {
+      var hasData = App.estimate.sections.some(function (s) { return (s.fieldSquares || 0) > 0; });
+      if (!hasData || confirm('Replace the current ' + App.estimate.sections.length +
+        ' section(s) with the ' + ex.sections.length + ' imported one(s)?')) {
+        App.estimate.sections = ex.sections.map(function (src, i) {
+          var sec = newSectionObj();
+          sec.name = src.name || ('Section ' + (i + 1));
+          if (src.scope) sec.scope = src.scope;
+          IMPORT_SECTION_FIELDS.forEach(function (f) {
+            if (src[f[0]] != null) setPath(sec, f[1], src[f[0]]);
+          });
+          return sec;
+        });
+      }
+    }
+    App.pendingImport = null;
+    $('import-review').hidden = true;
+    $('import-review').innerHTML = '';
+    renderEstimateForm();
+    KRE.storage.autosaveDraft(App.estimate);
+  }
+
+  function wireImport() {
+    var dz = $('dropzone'), fi = $('file-import'), tpl = $('csv-template-link');
+    if (!dz || !fi) return;
+    dz.addEventListener('click', function () { fi.click(); });
+    dz.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fi.click(); } });
+    ['dragover', 'dragenter'].forEach(function (ev) {
+      dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.add('drag'); });
+    });
+    ['dragleave', 'drop'].forEach(function (ev) {
+      dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.remove('drag'); });
+    });
+    dz.addEventListener('drop', function (e) {
+      var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+      handleImportFile(f);
+    });
+    fi.addEventListener('change', function () { handleImportFile(fi.files[0]); fi.value = ''; });
+    if (tpl) tpl.addEventListener('click', function (e) {
+      e.preventDefault();
+      var blob = new Blob([KRE.importer.csvTemplate()], { type: 'text/csv' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'kodiak-takeoff-template.csv';
+      document.body.appendChild(a); a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+    });
+  }
+
   /* ---------- boot ---------- */
 
   document.addEventListener('DOMContentLoaded', function () {
@@ -682,6 +837,7 @@
     renderSaved();
     updateSampleBadges();
     wireEvents();
+    wireImport();
     switchTab(App.ui.tab || 'estimate');
   });
 })();
