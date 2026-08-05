@@ -409,6 +409,7 @@
     if (mp) mp.textContent = money(t.perSqFt) + ' / sq ft';
 
     renderPreview();
+    renderPlan();
   }
 
   /* ---------- interactive roof preview ---------- */
@@ -589,15 +590,15 @@
 
   var lastPvEl = null; // pointerover fires per child crossed — render once per element
 
-  function showPreviewDetail(el) {
+  function showPreviewDetail(el, detail) {
     if (el === lastPvEl) return;
     lastPvEl = el;
-    var detail = $('preview-detail');
     if (!detail) return;
     var name = el.dataset.pvname || '';
     var cats = (el.dataset.pvcats || '').split(',').filter(Boolean);
     var sku = el.dataset.pvsku;
-    var secId = App.estimate.sections[App.ui.previewSec || 0].id;
+    // plan-view faces carry their own section id; the cross-section uses the active tab
+    var secId = el.dataset.pvsec || App.estimate.sections[App.ui.previewSec || 0].id;
     var secRes = ((App.lastResult || {}).sections || []).filter(function (x) { return x.id === secId; })[0];
     var lines = ((secRes || {}).lines || []).filter(function (l) {
       return sku ? l.sku === sku : cats.indexOf(l.category) >= 0;
@@ -615,13 +616,62 @@
   }
 
   function wirePreview() {
-    var svgEl = $('preview-svg');
-    if (!svgEl) return;
-    ['pointerover', 'click', 'focusin'].forEach(function (ev) {
-      svgEl.addEventListener(ev, function (e) {
-        var el = e.target.closest ? e.target.closest('.pv-el') : null;
-        if (el) showPreviewDetail(el);
+    [['preview-svg', 'preview-detail'], ['plan-svg', 'plan-detail']].forEach(function (pair) {
+      var svgEl = $(pair[0]), detail = $(pair[1]);
+      if (!svgEl) return;
+      ['pointerover', 'click', 'focusin'].forEach(function (ev) {
+        svgEl.addEventListener(ev, function (e) {
+          var el = e.target.closest ? e.target.closest('.pv-el') : null;
+          if (el) showPreviewDetail(el, detail);
+        });
       });
+    });
+  }
+
+  /* ---------- bird's-eye 3D view (drag to orbit) ---------- */
+
+  function renderPlan() {
+    var host = $('plan-svg');
+    if (!host) return;
+    var html = KRE.plan.build(App.estimate, App.catalog, App.lastResult, {
+      yaw: App.ui.planYaw || 0, tilt: App.ui.planTilt || 0
+    });
+    if (host._last !== html) {
+      host._last = html;
+      lastPvEl = null;
+      host.innerHTML = html;
+    }
+  }
+
+  function wirePlan() {
+    var host = $('plan-svg');
+    if (!host) return;
+    var drag = null;
+    host.addEventListener('pointerdown', function (e) {
+      drag = { x: e.clientX, y: e.clientY, yaw: App.ui.planYaw || 0, tilt: App.ui.planTilt || 0 };
+      host.classList.add('dragging');
+      host.setPointerCapture(e.pointerId);
+    });
+    host.addEventListener('pointermove', function (e) {
+      if (!drag) return;
+      App.ui.planYaw = (drag.yaw + (e.clientX - drag.x) * 0.5) % 360;
+      App.ui.planTilt = Math.max(0, Math.min(70, drag.tilt + (e.clientY - drag.y) * 0.35));
+      renderPlan();
+    });
+    ['pointerup', 'pointercancel'].forEach(function (ev) {
+      host.addEventListener(ev, function () {
+        if (!drag) return;
+        drag = null;
+        host.classList.remove('dragging');
+        KRE.storage.saveUI(App.ui);
+      });
+    });
+    var reset = $('btn-plan-reset');
+    if (reset) reset.addEventListener('click', function () {
+      App.ui.planYaw = 0;
+      App.ui.planTilt = 0;
+      KRE.storage.saveUI(App.ui);
+      renderPlan();
     });
   }
 
@@ -1157,6 +1207,7 @@
     wireEvents();
     wireImport();
     wirePreview();
+    wirePlan();
     switchTab(App.ui.tab || 'estimate');
   });
 })();

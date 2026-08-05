@@ -612,6 +612,13 @@ tr.total-row td{font-weight:700;color:var(--dark);border-top:2px solid var(--dar
 .pv-lbl{font-size:10px;fill:#7a6c4e;font-family:var(--sans);pointer-events:none;}
 .pv-dim{font-size:11px;fill:var(--text-soft);font-family:var(--sans);font-weight:600;
   text-transform:uppercase;letter-spacing:.05em;pointer-events:none;}
+/* bird's-eye 3D view */
+#plan-svg{touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;}
+#plan-svg.dragging{cursor:grabbing;}
+#plan-svg svg{width:100%;height:auto;display:block;}
+.pv-plan{stroke:rgba(0,0,0,.22);stroke-width:.35;stroke-linejoin:round;}
+.plan-hint{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+
 .pv-detail{
   margin-top:10px;padding:10px 12px;background:var(--bg-2);border-left:3px solid var(--red);
   border-radius:0 var(--r-sm) var(--r-sm) 0;font-size:.8rem;color:var(--text-soft);min-height:38px;

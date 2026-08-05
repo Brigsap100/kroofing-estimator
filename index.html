@@ -17,6 +17,8 @@
                #sections-list, #btn-add-section
                #preview-card   — interactive roof drawing: #preview-tabs,
                #preview-svg, #preview-detail (rendered by ui.js)
+               #plan-card      — draggable 3D bird's-eye view: #plan-svg,
+               #plan-detail, #btn-plan-reset (ui.js + js/plan.js)
                #markups-card   — static num inputs (markups.*)
     Results:   #results (aside; gets class "open" as a bottom sheet <900px)
                #res-total, #res-persf, #res-split, #res-errors, #res-warnings
@@ -186,6 +188,15 @@
             <div id="preview-detail" class="pv-detail">Hover or tap any part of the drawing to see its material, quantity, and cost.</div>
           </div>
 
+          <!-- Bird's-eye 3D view (rendered by ui.js + js/plan.js) -->
+          <div class="card" id="plan-card">
+            <h2 class="card-title">Bird&rsquo;s-eye view</h2>
+            <p class="mini-note plan-hint">Drag the roof to rotate and tilt it.
+              <button id="btn-plan-reset" class="btn btn-ghost btn-sm" type="button">Top view</button></p>
+            <div id="plan-svg"></div>
+            <div id="plan-detail" class="pv-detail">Hover or tap a roof, wall, or unit to see its costs.</div>
+          </div>
+
           <!-- Markups -->
           <div class="card" id="markups-card">
             <h2 class="card-title">Markups</h2>
@@ -286,6 +297,7 @@
 <script src="js/engine.js"></script>
 <script src="js/storage.js"></script>
 <script src="js/importer.js"></script>
+<script src="js/plan.js"></script>
 <script src="js/print.js"></script>
 <script src="js/ui.js"></script>
 </body>
