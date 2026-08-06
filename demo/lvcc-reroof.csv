@@ -1,0 +1,10 @@
+Project,Las Vegas Convention Center Reroof
+Customer,Las Vegas Convention and Visitors Authority
+Address,3150 Paradise Rd
+City,Las Vegas
+State,NV
+Estimator,Test Data
+Stories,2
+
+Section,Squares,Perimeter LF,Edge Metal LF,Flashing LF,Flashing Height FT,Pipes,Curbs,Skylights,HVAC,Drains,Scuppers,Scope,Existing Layers
+Main Roof,20935,8000,8000,10000,3,210,150,0,60,230,0,tearoff,1

@@ -129,7 +129,7 @@
       var secRes = ((result || {}).sections || []).filter(function (x) { return x.id === s.id; })[0];
       var asm = (secRes && secRes.assembly) || estimate.assembly || {};
       var mem = ((catalog || {}).membranes || {})[asm.membraneKey];
-      var memFill = MEMBRANE_FILLS[mem ? mem.type : 'tpo'] || '#e9e9e9';
+      var memFill = MEMBRANE_FILLS[String(mem ? mem.type : 'tpo').toLowerCase()] || '#e9e9e9';
       var secName = s.name || 'Section ' + (si + 1);
 
       // slab
@@ -200,9 +200,14 @@
         ' data-pvsec="' + esc(f.pv.sec) + '" tabindex="0"/>';
     }).join('');
 
+    // label size scales with the scene: CSS px would be viewBox units here,
+    // which renders comically large on small roofs — inline style wins over
+    // the .pv-dim class rule.
+    var fs = r1(Math.max(3, radius * 0.05));
     svg += labels.map(function (lb) {
       var q = proj(lb.x, lb.y, lb.z);
-      return '<text x="' + r1(q.x) + '" y="' + r1(q.y) + '" class="pv-dim" text-anchor="middle">' + esc(lb.text) + '</text>';
+      return '<text x="' + r1(q.x) + '" y="' + r1(q.y) + '" class="pv-dim" text-anchor="middle"' +
+        ' style="font-size:' + fs + 'px">' + esc(lb.text) + '</text>';
     }).join('');
 
     return '<svg viewBox="' + r1(-radius) + ' ' + r1(-vbY) + ' ' + r1(radius * 2) + ' ' + r1(vbY * 2) +

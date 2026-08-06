@@ -94,6 +94,14 @@
       html += linesTable(sec.lines || [], sec.matCost, sec.laborCost);
     });
 
+    // estimate-wide lines (equipment, mobilization, disposal, fees) carry no section
+    var projLines = (result.lines || []).filter(function (l) { return l.sectionId == null; });
+    if (projLines.length) {
+      var pm = 0, pl = 0;
+      projLines.forEach(function (l) { pm += l.matTotal || 0; pl += l.laborTotal || 0; });
+      html += '<h2>Project-wide</h2>' + linesTable(projLines, pm, pl);
+    }
+
     if ((result.orderList || []).length) {
       html += '<h2>Material Order List</h2>' +
         '<table><thead><tr><th>Item</th><th class="num">Order qty</th><th>Unit</th></tr></thead><tbody>' +

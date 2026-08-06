@@ -1,0 +1,10 @@
+Project,Los Angeles Convention Center - South Hall Reroof
+Customer,City of Los Angeles (AEG Facilities)
+Address,1201 S Figueroa St
+City,Los Angeles
+State,CA
+Estimator,Test Data
+Stories,2
+
+Section,Squares,Perimeter LF,Edge Metal LF,Flashing LF,Flashing Height FT,Pipes,Curbs,Skylights,HVAC,Drains,Scuppers,Scope,Existing Layers
+Main Roof,4000,2700,2700,3200,2,40,50,0,24,44,0,tearoff,1

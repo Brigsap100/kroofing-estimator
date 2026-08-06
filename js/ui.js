@@ -397,6 +397,17 @@
       var badge = document.querySelector('[data-sec-total="' + sec.id + '"]');
       if (badge) badge.textContent = money((sec.matCost || 0) + (sec.laborCost || 0));
     });
+
+    // estimate-wide lines (equipment, mobilization, disposal, design fees)
+    // have no sectionId and would otherwise be invisible in this list
+    var projLines = (res.lines || []).filter(function (l) { return l.sectionId == null; });
+    if (projLines.length) {
+      lh += '<table><tbody><tr class="group-row"><td colspan="4">Project-wide</td></tr>' +
+        projLines.map(function (l) {
+          return '<tr><td>' + esc(l.desc) + '</td><td class="num">' + qty(l.qty) + ' ' + esc(l.unit) + '</td>' +
+            '<td class="num">' + money(l.matTotal) + '</td><td class="num">' + money(l.laborTotal) + '</td></tr>';
+        }).join('') + '</tbody></table>';
+    }
     $('res-lines').innerHTML = lh || '<p class="muted">No line items yet.</p>';
 
     $('res-order').innerHTML = (res.orderList || []).length ?
@@ -452,7 +463,7 @@
     var asm = (secRes && secRes.assembly) || App.estimate.assembly;
     var c = App.catalog;
     var mem = (c.membranes || {})[asm.membraneKey];
-    var memType = mem ? mem.type : (String(asm.membraneKey || '').split('-')[0] || 'tpo');
+    var memType = String(mem ? mem.type : (asm.membraneKey || 'tpo').split('-')[0]).toLowerCase();
     var memFill = MEMBRANE_FILLS[memType] || '#e9e9e9';
     var method = (asm.attachment || {}).method || 'mech';
 
@@ -633,8 +644,11 @@
   function renderPlan() {
     var host = $('plan-svg');
     if (!host) return;
+    // default to a slightly-orbited 3D angle — a pure top view reads as a
+    // flat gray strip and looks broken; "Top view" is still one click away
     var html = KRE.plan.build(App.estimate, App.catalog, App.lastResult, {
-      yaw: App.ui.planYaw || 0, tilt: App.ui.planTilt || 0
+      yaw: App.ui.planYaw == null ? 25 : App.ui.planYaw,
+      tilt: App.ui.planTilt == null ? 35 : App.ui.planTilt
     });
     if (host._last !== html) {
       host._last = html;
@@ -648,9 +662,13 @@
     if (!host) return;
     var drag = null;
     host.addEventListener('pointerdown', function (e) {
-      drag = { x: e.clientX, y: e.clientY, yaw: App.ui.planYaw || 0, tilt: App.ui.planTilt || 0 };
+      drag = {
+        x: e.clientX, y: e.clientY,
+        yaw: App.ui.planYaw == null ? 25 : App.ui.planYaw,   // match renderPlan defaults
+        tilt: App.ui.planTilt == null ? 35 : App.ui.planTilt
+      };
       host.classList.add('dragging');
-      host.setPointerCapture(e.pointerId);
+      try { host.setPointerCapture(e.pointerId); } catch (err) { /* synthetic/stale pointer */ }
     });
     host.addEventListener('pointermove', function (e) {
       if (!drag) return;

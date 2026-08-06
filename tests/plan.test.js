@@ -76,6 +76,10 @@ var res = { sections: [{ id: est.sections[0].id, assembly: { membraneKey: 'tpo-6
 var svg2 = plan.build(est, C, res, { yaw: 0, tilt: 0 });
 ok(svg2.indexOf('TPO 60-mil') >= 0, 'build: membrane label from resolved section assembly');
 
+// catalog membrane `type` is uppercase ('EPDM') — fill lookup must normalize,
+// so the EPDM slab's top face renders dark (#4a4a4a → rgb(74,74,74)), not gray
+ok(svg.indexOf('rgb(74,74,74)') >= 0, 'build: EPDM slab uses the dark EPDM fill (case-insensitive type)');
+
 // stability: same inputs → identical string (safe for the _last render guard)
 ok(plan.build(est, C, null, { yaw: 25, tilt: 40 }) === svg, 'build: deterministic output');
 

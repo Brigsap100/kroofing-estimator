@@ -103,6 +103,10 @@ Script load order matters: catalog.defaults → engine → storage → print →
 
 ## Deploy
 
-Push to `main`. Note: GitHub Pages on a **private** repo requires a paid plan —
+Push to `main`. **When changing any js/ or css/ file, bump the `?v=N` query
+on the matching `<script>`/`<link>` tags in index.html** — browsers cache the
+old files otherwise, and a stale `ui.js` against a new `index.html` makes new
+features silently render nothing (this exact skew has been mistaken for a bug).
+Note: GitHub Pages on a **private** repo requires a paid plan —
 the tool runs fine locally either way, and no real rates ever live in the repo,
 so making the repo public is also safe.
