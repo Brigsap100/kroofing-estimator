@@ -49,7 +49,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Roboto+Condensed:wght@400;500;600;700&display=swap">
-  <link rel="stylesheet" href="css/app.css?v=4">
+  <link rel="stylesheet" href="css/app.css?v=5">
 </head>
 <body>
 <div class="app">
@@ -96,6 +96,10 @@
             <input type="file" id="file-import" accept=".json,.csv,.tsv,.txt,.xlsx,.pdf" hidden>
             <p class="mini-note">CSV/Excel: <a href="#" id="csv-template-link">download the takeoff template</a>.
               PDF extraction is best-effort &mdash; review what was found before applying.</p>
+            <p class="mini-note demo-row">Or try a real documented reroof:
+              <button type="button" class="btn btn-ghost btn-sm" data-action="demo-load" data-demo="lacc-south-hall">LA Convention Center (400k sq ft)</button>
+              <button type="button" class="btn btn-ghost btn-sm" data-action="demo-load" data-demo="lvcc-reroof">Las Vegas CC (2.09M sq ft)</button>
+            </p>
             <div id="import-review" hidden></div>
           </div>
 
@@ -293,12 +297,12 @@
 <!-- Print output (populated by js/print.js) -->
 <div id="print-root" hidden></div>
 
-<script src="js/catalog.defaults.js?v=4"></script>
-<script src="js/engine.js?v=4"></script>
-<script src="js/storage.js?v=4"></script>
-<script src="js/importer.js?v=4"></script>
-<script src="js/plan.js?v=4"></script>
-<script src="js/print.js?v=4"></script>
-<script src="js/ui.js?v=4"></script>
+<script src="js/catalog.defaults.js?v=5"></script>
+<script src="js/engine.js?v=5"></script>
+<script src="js/storage.js?v=5"></script>
+<script src="js/importer.js?v=5"></script>
+<script src="js/plan.js?v=5"></script>
+<script src="js/print.js?v=5"></script>
+<script src="js/ui.js?v=5"></script>
 </body>
 </html>

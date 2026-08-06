@@ -979,6 +979,23 @@
         renderAssembly(); renderSections(); afterEstimateChange();
         break;
       }
+      case 'demo-load': {
+        var demo = btn.dataset.demo;
+        var review = $('import-review');
+        review.hidden = false;
+        review.innerHTML = '<p class="muted">Loading demo takeoff…</p>';
+        fetch('demo/' + demo + '.csv').then(function (r) {
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.text();
+        }).then(function (text) {
+          var extract = KRE.importer.mapTabular(KRE.importer.parseCSV(text));
+          renderImportReview({ kind: 'extract', extract: extract, sourceName: btn.textContent.trim() + ' (demo)' });
+        }).catch(function (err) {
+          review.innerHTML = '<div class="liability-note">Could not load the demo file: ' + esc(err.message || err) + '</div>' +
+            '<button type="button" class="btn btn-ghost btn-sm" data-action="import-dismiss">Dismiss</button>';
+        });
+        break;
+      }
       case 'import-apply': applyImport(); break;
       case 'import-dismiss':
         App.pendingImport = null;
